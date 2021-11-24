@@ -30,6 +30,15 @@ public class Constants {
         public static final int K_SMART_CURRENT_LIMIT = 40;
         public static final int K_OPENLOOP_RAMP = 0;
 
+        // Create our feedforward gain constants (from the characterization tool)
+        public static final double KvLinear = 4.58;
+        public static final double KaLinear = 0.322;
+        public static final double KvAngular = 4.51;
+        public static final double KaAngular = 0.22;
+
+        public static final double POSITION_FACTOR = 1.0 / 36.797;
+        public static final double VELOCITY_FACTOR = POSITION_FACTOR / 60.;
+
     }
 
 }
