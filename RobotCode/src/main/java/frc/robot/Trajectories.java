@@ -23,8 +23,8 @@ public class Trajectories {
 
         return TrajectoryGenerator.generateTrajectory(
                 Arrays.asList(
-                        new Pose2d(Units.feetToMeters(2.5), Units.feetToMeters(7.5), Rotation2d.fromDegrees(0)),
-                        new Pose2d(Units.feetToMeters(10.5), Units.feetToMeters(12.5), Rotation2d.fromDegrees(0))
+                        new Pose2d(Units.feetToMeters(2.5), Units.feetToMeters(13.5), Rotation2d.fromDegrees(0)),
+                        new Pose2d(Units.feetToMeters(10.5), Units.feetToMeters(18.5), Rotation2d.fromDegrees(0))
                 ),
                 config
         );
