@@ -3,6 +3,10 @@ package frc.robot.subsystems;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
@@ -11,6 +15,9 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.AnalogGyroSim;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
 import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import static frc.robot.Constants.AnalogChannels.GYRO_CHANNEL;
@@ -18,6 +25,8 @@ import static frc.robot.Constants.CANBusIDs.*;
 import static frc.robot.Constants.DrivetrainConstants.*;
 
 public class Drivetrain extends SubsystemBase {
+
+    private Field2d field = new Field2d();
 
     private final CANSparkMax leftWheelsMaster = new CANSparkMax(DRIVETRAIN_LEFT_MASTER_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
     private final CANSparkMax leftWheelsSlave = new CANSparkMax(DRIVETRAIN_LEFT_SLAVE_ID, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -31,6 +40,8 @@ public class Drivetrain extends SubsystemBase {
     private final AnalogGyro ahrs = new AnalogGyro(GYRO_CHANNEL);
 
     private final AnalogGyroSim ahrsSim = new AnalogGyroSim(ahrs);
+
+    private final DifferentialDriveOdometry driveOdometry = new DifferentialDriveOdometry(getHeading());
 
     // Create the simulation model of our drivetrain.
     private final DifferentialDrivetrainSim driveSim = new DifferentialDrivetrainSim(
@@ -84,12 +95,23 @@ public class Drivetrain extends SubsystemBase {
         leftWheelsMaster.getEncoder().setVelocityConversionFactor(VELOCITY_FACTOR);
         leftWheelsSlave.getEncoder().setVelocityConversionFactor(VELOCITY_FACTOR);
 
+        leftWheelsMaster.getPIDController().setP(VOLTAGE_P, 0);
+        leftWheelsMaster.getPIDController().setI(0.0, 0);
+        leftWheelsMaster.getPIDController().setD(0.0, 0);
+
+        rightWheelsMaster.getPIDController().setP(VOLTAGE_P, 0);
+        rightWheelsMaster.getPIDController().setI(0.0, 0);
+        rightWheelsMaster.getPIDController().setD(0.0, 0);
+
         ahrs.reset();
+
+        SmartDashboard.putData("Field", field);
     }
 
     @Override
     public void periodic() {
-
+        updateRobotPose();
+        field.setRobotPose(driveOdometry.getPoseMeters());
     }
 
     @Override
@@ -116,6 +138,53 @@ public class Drivetrain extends SubsystemBase {
 
 //        System.out.println(leftWheelsMaster.getBusVoltage());
 //        System.out.println(RobotController.getBatteryVoltage());
+    }
+
+    public Pose2d getCurrentPose() {
+        return driveOdometry.getPoseMeters();
+    }
+
+    public DifferentialDriveWheelSpeeds getSpeeds() {
+        return new DifferentialDriveWheelSpeeds(
+                getLeftVelocityMetersPerSec(),
+                getRightVelocityMetersPerSec()
+        );
+    }
+
+    public double getLeftPositionMeters() {
+        return leftWheelsMaster.getEncoder().getPosition();
+    }
+
+    public double getRightPositionMeters() {
+        return rightWheelsMaster.getEncoder().getPosition();
+    }
+
+    public double getLeftVelocityMetersPerSec() {
+        return leftWheelsMaster.getEncoder().getVelocity();
+    }
+
+    public double getRightVelocityMetersPerSec() {
+        return rightWheelsMaster.getEncoder().getVelocity();
+    }
+
+    public double getLeftVoltage() {
+        return leftWheelsMaster.getBusVoltage() * leftWheelsMaster.get();
+    }
+
+    public double getRightVoltage() {
+        return rightWheelsMaster.getBusVoltage() * rightWheelsMaster.get();
+    }
+
+    private void updateRobotPose() {
+        driveOdometry.update(getHeading(), getLeftPositionMeters(), getRightPositionMeters());
+    }
+
+    public Rotation2d getHeading() {
+        return ahrs.getRotation2d();
+    }
+
+    public double getAngularVelocityDegreesPerSec() {
+        return -ahrs.getRate();
     }
 
     public void setDutyCycles(double leftDutyCycle, double rightDutyCycle) {

@@ -39,6 +39,8 @@ public class Constants {
         public static final double POSITION_FACTOR = 1.0 / 36.797;
         public static final double VELOCITY_FACTOR = POSITION_FACTOR / 60.;
 
+        public static final double VOLTAGE_P = 1.0;
+
     }
 
 }
