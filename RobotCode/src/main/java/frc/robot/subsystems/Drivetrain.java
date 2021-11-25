@@ -3,14 +3,19 @@ package frc.robot.subsystems;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.RamseteController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.AnalogGyroSim;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
@@ -41,7 +46,15 @@ public class Drivetrain extends SubsystemBase {
 
     private final AnalogGyroSim ahrsSim = new AnalogGyroSim(ahrs);
 
+    private final SimpleMotorFeedforward linearFeedforward = new SimpleMotorFeedforward(KsLinear, KvLinear, KaAngular);
     private final DifferentialDriveOdometry driveOdometry = new DifferentialDriveOdometry(getHeading());
+    private final DifferentialDriveKinematics driveKinematics = new DifferentialDriveKinematics(
+            TRACK_WIDTH
+    );
+    private final RamseteController ramseteController = new RamseteController();
+
+    private final PIDController leftVelocityPID = new PIDController(LEFT_VELOCITY_P, 0.0, 0.0);
+    private final PIDController rightVelocityPID = new PIDController(RIGHT_VELOCITY_P, 0.0, 0.0);
 
     // Create the simulation model of our drivetrain.
     private final DifferentialDrivetrainSim driveSim = new DifferentialDrivetrainSim(
@@ -49,7 +62,7 @@ public class Drivetrain extends SubsystemBase {
             LinearSystemId.identifyDrivetrainSystem(KvLinear, KaLinear, KvAngular, KaAngular),
             DCMotor.getNEO(2),       // 2 NEO motors on each side of the drivetrain.
             10.0,
-            0.8285293767383018,
+            TRACK_WIDTH,
             Units.inchesToMeters(5),
 
             // The standard deviations for measurement noise:
@@ -103,7 +116,7 @@ public class Drivetrain extends SubsystemBase {
         rightWheelsMaster.getPIDController().setI(0.0, 0);
         rightWheelsMaster.getPIDController().setD(0.0, 0);
 
-        ahrs.reset();
+        zeroAll();
 
         SmartDashboard.putData("Field", field);
     }
@@ -138,6 +151,14 @@ public class Drivetrain extends SubsystemBase {
 
 //        System.out.println(leftWheelsMaster.getBusVoltage());
 //        System.out.println(RobotController.getBatteryVoltage());
+    }
+
+    public Field2d getField() {
+        return field;
+    }
+
+    public SimpleMotorFeedforward getLinearFeedforward() {
+        return linearFeedforward;
     }
 
     public Pose2d getCurrentPose() {
@@ -179,6 +200,14 @@ public class Drivetrain extends SubsystemBase {
         driveOdometry.update(getHeading(), getLeftPositionMeters(), getRightPositionMeters());
     }
 
+    public DifferentialDriveKinematics getDriveKinematics() {
+        return driveKinematics;
+    }
+
+    public RamseteController getRamseteController() {
+        return ramseteController;
+    }
+
     public Rotation2d getHeading() {
         return ahrs.getRotation2d();
     }
@@ -187,9 +216,50 @@ public class Drivetrain extends SubsystemBase {
         return -ahrs.getRate();
     }
 
+    public PIDController getLeftVelocityPID() {
+        return leftVelocityPID;
+    }
+
+    public PIDController getRightVelocityPID() {
+        return rightVelocityPID;
+    }
+
+    public void zeroAll() {
+        zeroHeading();
+        zeroEncoders();
+    }
+
+    public void zeroHeading() {
+        if (RobotBase.isReal()) {
+            ahrs.reset();
+        } else {
+            ahrsSim.setAngle(0.0);
+        }
+    }
+
+    public void zeroEncoders() {
+        if (RobotBase.isReal()) {
+            leftWheelsMaster.getEncoder().setPosition(0.0);
+            rightWheelsMaster.getEncoder().setPosition(0.0);
+        } else {
+            leftWheelsMasterSim.getDouble("Position").set(0.0);
+            rightWheelsMasterSim.getDouble("Position").set(0.0);
+        }
+    }
+
+    public void resetPose(Pose2d startingPose) {
+        zeroEncoders();
+        driveOdometry.resetPosition(startingPose, getHeading());
+    }
+
     public void setDutyCycles(double leftDutyCycle, double rightDutyCycle) {
         leftWheelsMaster.set(leftDutyCycle);
         rightWheelsMaster.set(rightDutyCycle);
+    }
+
+    public void setVoltages(double leftVoltage, double rightVoltage) {
+        leftWheelsMaster.set(leftVoltage / leftWheelsMaster.getBusVoltage());
+        rightWheelsMaster.set(leftVoltage / rightWheelsMaster.getBusVoltage());
     }
 
 }

@@ -5,11 +5,12 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.commands.DriveCommand;
+import edu.wpi.first.wpilibj2.command.RamseteCommand;
+import frc.robot.commands.teleop.DriveCommand;
 import frc.robot.subsystems.Drivetrain;
+
+import static frc.robot.Trajectories.forwards5ft;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -58,7 +59,16 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
+    drivetrain.resetPose(forwards5ft.getInitialPose());
+    drivetrain.getField().getObject("traj").setTrajectory(forwards5ft);
 
+    new RamseteCommand(forwards5ft, drivetrain::getCurrentPose,
+            drivetrain.getRamseteController(), drivetrain.getLinearFeedforward(),
+            drivetrain.getDriveKinematics(), drivetrain::getSpeeds,
+            drivetrain.getLeftVelocityPID(), drivetrain.getRightVelocityPID(),
+            drivetrain::setVoltages, drivetrain).andThen(
+                    () -> drivetrain.setDutyCycles(0.0, 0.0)
+    ).schedule();
   }
 
   /** This function is called periodically during autonomous. */

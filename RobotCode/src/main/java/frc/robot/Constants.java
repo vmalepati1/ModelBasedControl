@@ -31,6 +31,7 @@ public class Constants {
         public static final int K_OPENLOOP_RAMP = 0;
 
         // Create our feedforward gain constants (from the characterization tool)
+        public static final double KsLinear = 0.216;
         public static final double KvLinear = 4.58;
         public static final double KaLinear = 0.322;
         public static final double KvAngular = 4.51;
@@ -40,6 +41,11 @@ public class Constants {
         public static final double VELOCITY_FACTOR = POSITION_FACTOR / 60.;
 
         public static final double VOLTAGE_P = 1.0;
+
+        public static final double LEFT_VELOCITY_P = 0.35;
+        public static final double RIGHT_VELOCITY_P = 0.35;
+
+        public static final double TRACK_WIDTH = 0.8285293767383018;
 
     }
 
