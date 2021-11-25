@@ -259,7 +259,7 @@ public class Drivetrain extends SubsystemBase {
 
     public void setVoltages(double leftVoltage, double rightVoltage) {
         leftWheelsMaster.set(leftVoltage / leftWheelsMaster.getBusVoltage());
-        rightWheelsMaster.set(leftVoltage / rightWheelsMaster.getBusVoltage());
+        rightWheelsMaster.set(rightVoltage / rightWheelsMaster.getBusVoltage());
     }
 
 }

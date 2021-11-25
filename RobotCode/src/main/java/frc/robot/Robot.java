@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import frc.robot.commands.teleop.DriveCommand;
 import frc.robot.subsystems.Drivetrain;
 
-import static frc.robot.Trajectories.forwards5ft;
+import static frc.robot.Trajectories.sCurve;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -33,6 +33,9 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     CommandScheduler.getInstance().setDefaultCommand(drivetrain, new DriveCommand());
+
+    drivetrain.resetPose(sCurve.getInitialPose());
+//    drivetrain.getField().getObject("traj").setTrajectory(sCurve);
   }
 
   /**
@@ -59,10 +62,9 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
-    drivetrain.resetPose(forwards5ft.getInitialPose());
-    drivetrain.getField().getObject("traj").setTrajectory(forwards5ft);
+    drivetrain.resetPose(sCurve.getInitialPose());
 
-    new RamseteCommand(forwards5ft, drivetrain::getCurrentPose,
+    new RamseteCommand(sCurve, drivetrain::getCurrentPose,
             drivetrain.getRamseteController(), drivetrain.getLinearFeedforward(),
             drivetrain.getDriveKinematics(), drivetrain::getSpeeds,
             drivetrain.getLeftVelocityPID(), drivetrain.getRightVelocityPID(),
