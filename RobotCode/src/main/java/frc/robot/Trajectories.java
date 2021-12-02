@@ -17,7 +17,7 @@ public class Trajectories {
 
     public static Trajectory generateSCurve() {
         TrajectoryConfig config = new TrajectoryConfig(
-                Units.feetToMeters(4), Units.feetToMeters(3));
+                Units.feetToMeters(8), Units.feetToMeters(4));
 
         config.setKinematics(drivetrain.getDriveKinematics());
 

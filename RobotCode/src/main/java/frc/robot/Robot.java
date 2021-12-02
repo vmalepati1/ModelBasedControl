@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.TimesliceRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import frc.robot.commands.teleop.DriveCommand;
@@ -18,12 +19,16 @@ import static frc.robot.Trajectories.sCurve;
  * the package after creating this project, you must also update the build.gradle file in the
  * project.
  */
-public class Robot extends TimedRobot {
+public class Robot extends TimesliceRobot {
 
   public static final Drivetrain drivetrain;
 
   static {
     drivetrain = new Drivetrain();
+  }
+
+  public Robot() {
+    super(0.002, 0.005);
   }
 
   /**
